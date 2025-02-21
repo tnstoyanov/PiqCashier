@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PaymentIQ Integration</title>
-  <script type="text/javascript" src="https://static.paymentiq.io/cashier/cashier.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,7 +39,8 @@
       color: #555;
     }
 
-    #payment-form input {
+    #payment-form input,
+    #payment-form select {
       width: calc(100% - 20px);
       padding: 10px;
       margin-bottom: 20px;
@@ -64,18 +64,75 @@
       background-color: #218838;
     }
 
-    #cashier {
-      width: 100%;
-      max-width: 400px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    #amount-suggestions {
       display: flex;
-      justify-content: center;
-      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    #amount-suggestions button {
+      flex: 1;
+      margin: 0 5px;
+      padding: 10px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #amount-suggestions button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Modal styles */
+    #modal {
       display: none;
-      /* Initially hidden */
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    #modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    #modal-content button {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #modal-content .ok-button {
+      background-color: #28a745;
+      color: white;
+    }
+
+    #modal-content .ok-button:hover {
+      background-color: #218838;
+    }
+
+    #modal-content .cancel-button {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    #modal-content .cancel-button:hover {
+      background-color: #c82333;
     }
   </style>
 </head>
@@ -85,16 +142,49 @@
     <h1>PaymentIQ Cashier Tester</h1>
 
     <form id="payment-form">
-      <label for="amount">Amount:</label>
-      <input type="number" id="amount" name="amount" required>
+      <div id="amount-suggestions">
+        <button type="button" onclick="setAmount(20)">20</button>
+        <button type="button" onclick="setAmount(50)">50</button>
+        <button type="button" onclick="setAmount(100)">100</button>
+      </div>
       <br>
+      <label for="amount">Amount:</label>
+      <input type="number" id="amount" name="amount" placeholder="Amount (int)" required>
+      <br>
+      <script>
+        function setAmount(value) {
+          document.getElementById('amount').value = value;
+        }
+      </script>
       <label for="country">Country:</label>
-      <input type="text" id="country" name="country" required>
+      <select id="country" name="country" required>
+        <option value="" disabled selected>Select your country</option>
+        <option value="arg">🇦🇷 Argentina</option>
+        <option value="bra">🇧🇷 Brazil</option>
+        <option value="col">🇨🇴 Colombia</option>
+        <option value="esp">🇪🇸 Spain</option>
+        <option value="ita">🇮🇹 Italy</option>
+        <option value="jpn">🇯🇵 Japan</option>
+        <option value="mex">🇲🇽 Mexico</option>
+        <option value="pol">🇵🇱 Poland</option>
+        <option value="sau">🇸🇦 Saudi Arabia</option>
+        <option value="swe">🇸🇪 Sweden</option>
+        <option value="tha">🇹🇭 Thailand</option>
+        <option value="uae">🇦🇪 United Arab Emirates</option>
+        <!-- Add more countries as needed -->
+      </select>
       <br>
       <button type="submit">Submit</button>
     </form>
+  </div>
 
-    <div id="cashier"></div>
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modal-content">
+      <p>DevCode will open in a new tab</p>
+      <button class="ok-button" onclick="openCashier()">Ok</button>
+      <button class="cancel-button" onclick="closeModal()">Cancel</button>
+    </div>
   </div>
 
   <script type="text/javascript">
@@ -104,33 +194,30 @@
       var amount = document.getElementById('amount').value;
       var country = document.getElementById('country').value;
 
-      var CashierInstance = new _PaymentIQCashier('#cashier',
-        {
-          merchantId: '100041978',
-          userId: '7654321',
-          sessionId: Math.floor(Math.random() * 1000000) + 3000000,
-          environment: 'test', // if not set, defaults to production
-          method: 'deposit', // if not set, defaults to deposit
-          amount: amount, // get value from input
-          country: country, // get value from input
-          containerHeight: 'auto', // makes the iframe fit properly
-          fetchConfig: 'true' // if not set, defaults to false. gets the theme from the cashier config
-        },
-        (api) => {
-          api.on({
-            update: data => console.log('The passed in data was set', data),
-            success: data => console.log('Transaction was completed successfully', data),
-            failure: data => console.log('Transaction failed', data),
-            isLoading: data => console.log('Data is loading', data),
-            doneLoading: data => console.log('Data has been successfully downloaded', data),
-            newProviderWindow: data => console.log('A new window / iframe has opened', data)
-          });
-        });
+      // Show the modal
+      document.getElementById('modal').style.display = 'block';
 
-      // Hide the form and show the cashier div
-      document.getElementById('payment-form').style.display = 'none';
-      document.getElementById('cashier').style.display = 'flex';
+      // Store the form data in a global variable
+      window.formData = { amount: amount, country: country };
     });
+
+    function openCashier() {
+      var amount = window.formData.amount;
+      var country = window.formData.country;
+
+      // Construct the cashier URL with query parameters
+      var cashierUrl = `cashier.html?amount=${amount}&country=${country}`;
+
+      // Open the cashier in a new tab
+      window.open(cashierUrl, '_blank');
+
+      // Close the modal
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
   </script>
 </body>
 

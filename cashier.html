@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaymentIQ Cashier</title>
+  <script type="text/javascript" src="https://static.paymentiq.io/cashier/cashier.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    #cashier {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cashier"></div>
+
+  <script type="text/javascript">
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const amount = urlParams.get('amount');
+    const country = urlParams.get('country');
+
+    // Initialize the cashier
+    new _PaymentIQCashier('#cashier', {
+      merchantId: '100041978',
+      userId: '7654321',
+      sessionId: Math.floor(Math.random() * 1000000) + 3000000,
+      environment: 'test', // if not set, defaults to production
+      method: 'deposit', // if not set, defaults to deposit
+      amount: amount, // get value from URL parameter
+      country: country, // get value from URL parameter
+      containerHeight: 'auto', // makes the iframe fit properly
+      fetchConfig: 'true' // if not set, defaults to false. gets the theme from the cashier config
+    }, (api) => {
+      api.on({
+        update: data => console.log('The passed in data was set', data),
+        success: data => console.log('Transaction was completed successfully', data),
+        failure: data => console.log('Transaction failed', data),
+        isLoading: data => console.log('Data is loading', data),
+        doneLoading: data => console.log('Data has been successfully downloaded', data),
+        newProviderWindow: data => console.log('A new window / iframe has opened', data)
+      });
+    });
+  </script>
+</body>
+
+</html>
